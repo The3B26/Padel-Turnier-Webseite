@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f2a1f">
+<title>Padel Turnier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --court-green: #1a3d2e;
+    --court-green-dark: #0f2a1f;
+    --court-line: #f4f1e8;
+    --accent: #ffd23f;
+    --accent-glow: #ffe066;
+    --danger: #ff4757;
+    --success: #2ed573;
+    --gold: #ffd700;
+    --silver: #c0c0c0;
+    --bronze: #cd7f32;
+    --text: #f4f1e8;
+    --text-muted: #a8b5af;
+    --card-bg: rgba(255,255,255,0.04);
+    --card-border: rgba(244,241,232,0.12);
+  }
+
+  html, body { overscroll-behavior: none; }
+
+  body {
+    min-height: 100vh;
+    font-family: 'Outfit', sans-serif;
+    background:
+      radial-gradient(ellipse at top, #1f4d3a 0%, transparent 50%),
+      radial-gradient(ellipse at bottom, #0a1f17 0%, transparent 50%),
+      var(--court-green-dark);
+    color: var(--text);
+    padding: 24px 16px 40px;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(90deg, transparent 49.5%, rgba(244,241,232,0.03) 49.5%, rgba(244,241,232,0.03) 50.5%, transparent 50.5%),
+      linear-gradient(0deg, transparent 49.5%, rgba(244,241,232,0.03) 49.5%, rgba(244,241,232,0.03) 50.5%, transparent 50.5%);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+
+  header { text-align: center; margin-bottom: 24px; }
+
+  .eyebrow {
+    font-family: 'Bebas Neue', sans-serif;
+    color: var(--accent);
+    letter-spacing: 0.4em;
+    font-size: 0.75rem;
+    margin-bottom: 6px;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.6rem, 11vw, 5.5rem);
+    letter-spacing: 0.04em;
+    line-height: 0.95;
+    background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    color: var(--text-muted);
+    margin-top: 10px;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+  }
+
+  .sync-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 24px;
+    color: var(--text-muted);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+  }
+
+  .sync-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: background 0.3s ease;
+  }
+
+  .sync-dot.online { background: var(--success); box-shadow: 0 0 8px var(--success); }
+  .sync-dot.syncing { background: var(--accent); animation: pulse 1s infinite; }
+  .sync-dot.error { background: var(--danger); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .storage-warning {
+    background: rgba(255,71,87,0.1);
+    border: 1px solid rgba(255,71,87,0.3);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    color: var(--text);
+    font-size: 0.8rem;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .ranking {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 36px;
+  }
+
+  @media (max-width: 640px) {
+    .ranking { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  }
+
+  .player-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 16px 12px 14px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+  }
+
+  .player-card.leader {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(255,210,63,0.12), rgba(255,210,63,0.02));
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(255,210,63,0.15);
+  }
+
+  .player-card.leader::before {
+    content: "👑";
+    position: absolute;
+    top: -6px;
+    right: 6px;
+    font-size: 1.2rem;
+  }
+
+  .player-rank {
+    font-family: 'Bebas Neue', sans-serif;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+  }
+
+  .player-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 0.05em;
+    margin: 4px 0 6px;
+  }
+
+  .player-points {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.6rem;
+    color: var(--accent);
+    line-height: 1;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .player-points.bump { transform: scale(1.25); }
+
+  .player-points-label {
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .adjust-row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .adjust-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--card-border);
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .adjust-btn:active { transform: scale(0.9); }
+  .adjust-btn.plus:active { background: rgba(255,210,63,0.2); border-color: var(--accent); color: var(--accent); }
+  .adjust-btn.minus:active { background: rgba(255,71,87,0.15); border-color: var(--danger); color: var(--danger); }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 0.15em;
+  }
+
+  .round { margin-bottom: 28px; }
+
+  .round-label {
+    display: inline-block;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    padding: 5px 12px;
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+
+  .match {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 12px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: center;
+    transition: border-color 0.3s ease;
+    backdrop-filter: blur(10px);
+  }
+
+  .match.decided { border-color: rgba(255,210,63,0.3); }
+
+  @media (max-width: 640px) {
+    .match { grid-template-columns: 1fr; gap: 8px; padding: 12px; }
+    .vs { padding: 4px 0; }
+  }
+
+  .team {
+    background: rgba(255,255,255,0.03);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 14px 10px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-align: center;
+    user-select: none;
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .team:active { transform: scale(0.97); }
+  .team:hover { background: rgba(255,210,63,0.08); border-color: rgba(255,210,63,0.4); }
+
+  .team.winner {
+    background: linear-gradient(135deg, rgba(255,210,63,0.25), rgba(255,210,63,0.08));
+    border-color: var(--accent);
+    box-shadow: 0 4px 20px rgba(255,210,63,0.2);
+  }
+
+  .team.winner::after {
+    content: "✓ Sieger";
+    display: block;
+    font-family: 'Bebas Neue', sans-serif;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    font-size: 0.7rem;
+    margin-top: 4px;
+  }
+
+  .team-names {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.15rem;
+    letter-spacing: 0.05em;
+  }
+
+  .team-hint {
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .vs {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    text-align: center;
+  }
+
+  .controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 28px;
+  }
+
+  button.btn {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 0.2em;
+    padding: 14px 24px;
+    border-radius: 30px;
+    border: 1px solid var(--card-border);
+    background: var(--card-bg);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    backdrop-filter: blur(10px);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  button.btn:active { transform: scale(0.96); }
+  button.btn:hover { background: rgba(255,210,63,0.1); border-color: var(--accent); }
+  button.btn.primary {
+    background: var(--accent);
+    color: var(--court-green-dark);
+    border-color: var(--accent);
+  }
+  button.btn.primary:hover {
+    background: var(--accent-glow);
+    box-shadow: 0 8px 24px rgba(255,210,63,0.3);
+  }
+  button.btn.share {
+    background: linear-gradient(135deg, #25D366, #128C7E);
+    color: white;
+    border-color: transparent;
+  }
+  button.btn.share:hover {
+    box-shadow: 0 8px 24px rgba(37,211,102,0.4);
+  }
+  button.btn.danger:hover {
+    background: rgba(255,71,87,0.15);
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+  button.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .reset-team {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    cursor: pointer;
+    margin-top: 4px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 6px;
+  }
+
+  .reset-team:hover { color: var(--danger); }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--accent);
+    color: var(--court-green-dark);
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.15em;
+    padding: 12px 24px;
+    border-radius: 30px;
+    opacity: 0;
+    transition: all 0.4s ease;
+    z-index: 100;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    font-size: 0.9rem;
+    max-width: 90vw;
+    text-align: center;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .loader {
+    position: fixed;
+    inset: 0;
+    background: var(--court-green-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 200;
+    transition: opacity 0.4s ease;
+  }
+
+  .loader.hidden { opacity: 0; pointer-events: none; }
+
+  .loader-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255,210,63,0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loader-text {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.3em;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  /* ─── SHARE MODAL ─────────────────────────────────────── */
+  .share-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 31, 23, 0.95);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    padding: 20px;
+    overflow-y: auto;
+  }
+
+  .share-modal.show { display: flex; }
+
+  .share-modal-content {
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .share-preview {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .share-preview img {
+    width: 100%;
+    display: block;
+  }
+
+  .share-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .share-close {
+    background: transparent;
+    border: 1px solid var(--card-border);
+    color: var(--text-muted);
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.2em;
+    padding: 12px;
+    border-radius: 30px;
+    cursor: pointer;
+    margin-top: 6px;
+  }
+
+  .share-close:hover { color: var(--text); }
+
+  /* Hidden canvas-rendering element */
+  #share-canvas-host {
+    position: fixed;
+    left: -10000px;
+    top: 0;
+    width: 800px;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<div class="loader" id="loader">
+  <div class="loader-spinner"></div>
+  <div class="loader-text">Lade Turnierstand…</div>
+</div>
+
+<div class="container">
+  <header>
+    <div class="eyebrow">★ Padel Turnier ★</div>
+    <h1>Jeder gegen<br>Jeden</h1>
+    <p class="subtitle">Ayoub · Ilias · Anas · Ouail — 90 Minuten Spielzeit</p>
+  </header>
+
+  <div class="sync-bar">
+    <span class="sync-dot" id="sync-dot"></span>
+    <span id="sync-text">Verbinde...</span>
+  </div>
+
+  <div id="warning-zone"></div>
+
+  <div class="ranking" id="ranking"></div>
+
+  <div class="section-header">
+    <div class="section-title">Spielplan</div>
+  </div>
+  <div id="rounds"></div>
+
+  <div class="controls">
+    <button class="btn share" id="btn-share" disabled>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+      Endstand teilen
+    </button>
+    <button class="btn primary" id="btn-add-round">+ Neue Runde</button>
+    <button class="btn danger" id="btn-reset">Zurücksetzen</button>
+  </div>
+</div>
+
+<!-- Share modal -->
+<div class="share-modal" id="share-modal">
+  <div class="share-modal-content">
+    <div class="share-preview" id="share-preview">
+      <div style="padding: 40px; color: #555;">Bild wird erstellt…</div>
+    </div>
+    <div class="share-actions">
+      <button class="btn share" id="btn-share-action">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+      <span id="btn-share-action-text">Teilen</span>
+    </button>
+      <button class="btn" id="btn-download">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Als Bild speichern
+      </button>
+      <button class="share-close" id="btn-share-close">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden canvas host for share image rendering -->
+<div id="share-canvas-host"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ════════════════════════════════════════════════════════════
+  //  ⚠️  HIER DEINE EIGENEN WERTE EINTRAGEN  ⚠️
+  // ════════════════════════════════════════════════════════════
+  const BIN_ID  = '6a08a3c7c0954111d83281df';
+  const API_KEY = '$2a$10$SNKLHtEmiwyuvqgWUvI2YuR5y2OEMYDquDDMv3LGZmVEi5j.SX/Rm';
+  // ════════════════════════════════════════════════════════════
+
+  const PLAYERS = ['Ayoub', 'Ilias', 'Anas', 'Ouail'];
+
+  const TEAM_COMBOS = [
+    { teamA: ['Ayoub', 'Ilias'], teamB: ['Anas', 'Ouail'] },
+    { teamA: ['Ayoub', 'Anas'],  teamB: ['Ilias', 'Ouail'] },
+    { teamA: ['Ayoub', 'Ouail'], teamB: ['Ilias', 'Anas'] }
+  ];
+
+  const API_BASE = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
+  const POLL_INTERVAL = 3000;
+  const SAVE_DEBOUNCE = 400;
+
+  function createRound() {
+    return TEAM_COMBOS.map(function(c) {
+      return { teamA: c.teamA, teamB: c.teamB, winner: null };
+    });
+  }
+
+  function freshState() {
+    const s = { rounds: [createRound()], manualAdjustments: {} };
+    PLAYERS.forEach(function(p) { s.manualAdjustments[p] = 0; });
+    return s;
+  }
+
+  let state = freshState();
+  let lastSavedJson = '';
+  let saveTimer = null;
+  let isLoading = true;
+
+  function setSyncStatus(status, text) {
+    document.getElementById('sync-dot').className = 'sync-dot ' + status;
+    document.getElementById('sync-text').textContent = text;
+  }
+
+  function fetchRemote() {
+    return fetch(API_BASE + '/latest', {
+      method: 'GET',
+      headers: { 'X-Master-Key': API_KEY }
+    }).then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).then(function(data) { return data.record; });
+  }
+
+  function pushRemote(newState) {
+    return fetch(API_BASE, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': API_KEY
+      },
+      body: JSON.stringify(newState)
+    }).then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    });
+  }
+
+  function normalizeState(raw) {
+    if (!raw || typeof raw !== 'object') return freshState();
+    const s = freshState();
+    if (Array.isArray(raw.rounds) && raw.rounds.length > 0) s.rounds = raw.rounds;
+    if (raw.manualAdjustments && typeof raw.manualAdjustments === 'object') {
+      PLAYERS.forEach(function(p) {
+        if (typeof raw.manualAdjustments[p] === 'number') {
+          s.manualAdjustments[p] = raw.manualAdjustments[p];
+        }
+      });
+    }
+    return s;
+  }
+
+  function scheduleSave() {
+    if (saveTimer) clearTimeout(saveTimer);
+    setSyncStatus('syncing', 'Speichere…');
+    saveTimer = setTimeout(function() {
+      pushRemote(state).then(function() {
+        lastSavedJson = JSON.stringify(state);
+        setSyncStatus('online', 'Live synchronisiert');
+        saveTimer = null;
+      }).catch(function(err) {
+        console.error('Save failed:', err);
+        setSyncStatus('error', 'Fehler beim Speichern');
+        saveTimer = null;
+      });
+    }, SAVE_DEBOUNCE);
+  }
+
+  function checkForRemoteUpdates() {
+    if (saveTimer) return;
+    fetchRemote().then(function(remote) {
+      const normalized = normalizeState(remote);
+      const remoteJson = JSON.stringify(normalized);
+      if (remoteJson !== lastSavedJson) {
+        state = normalized;
+        lastSavedJson = remoteJson;
+        renderAll();
+      }
+      setSyncStatus('online', 'Live synchronisiert');
+    }).catch(function(err) {
+      console.error('Poll failed:', err);
+      setSyncStatus('error', 'Verbindung verloren');
+    });
+  }
+
+  function init() {
+    if (BIN_ID.indexOf('HIER_') === 0 || API_KEY.indexOf('HIER_') === 0) {
+      document.getElementById('loader').classList.add('hidden');
+      document.getElementById('warning-zone').innerHTML =
+        '<div class="storage-warning">' +
+        '⚠️ <strong>Konfiguration fehlt!</strong><br>' +
+        'In der HTML-Datei müssen BIN_ID und API_KEY eingetragen werden.' +
+        '</div>';
+      isLoading = false;
+      renderAll();
+      return;
+    }
+
+    setSyncStatus('syncing', 'Lade…');
+    fetchRemote().then(function(remote) {
+      state = normalizeState(remote);
+      lastSavedJson = JSON.stringify(state);
+      setSyncStatus('online', 'Live synchronisiert');
+      isLoading = false;
+      document.getElementById('loader').classList.add('hidden');
+      renderAll();
+      setInterval(checkForRemoteUpdates, POLL_INTERVAL);
+    }).catch(function(err) {
+      console.error('Initial load failed:', err);
+      setSyncStatus('error', 'Offline – nur lokal');
+      isLoading = false;
+      document.getElementById('loader').classList.add('hidden');
+      document.getElementById('warning-zone').innerHTML =
+        '<div class="storage-warning">' +
+        '⚠️ Keine Verbindung zur Cloud. Änderungen werden nicht synchronisiert.' +
+        '</div>';
+      renderAll();
+    });
+  }
+
+  function calculatePoints() {
+    const points = {};
+    PLAYERS.forEach(function(p) { points[p] = state.manualAdjustments[p] || 0; });
+    state.rounds.forEach(function(round) {
+      round.forEach(function(match) {
+        if (match.winner === 'A') match.teamA.forEach(function(p) { points[p]++; });
+        else if (match.winner === 'B') match.teamB.forEach(function(p) { points[p]++; });
+      });
+    });
+    PLAYERS.forEach(function(p) { if (points[p] < 0) points[p] = 0; });
+    return points;
+  }
+
+  function countDecidedMatches() {
+    let count = 0;
+    state.rounds.forEach(function(round) {
+      round.forEach(function(match) { if (match.winner) count++; });
+    });
+    return count;
+  }
+
+  function renderRanking() {
+    const points = calculatePoints();
+    const sorted = PLAYERS.map(function(name) {
+      return { name: name, points: points[name] };
+    }).sort(function(a, b) { return b.points - a.points; });
+    const maxPts = sorted[0].points;
+    const someoneScored = maxPts > 0;
+
+    const container = document.getElementById('ranking');
+    const prevPoints = {};
+    const existingCards = container.querySelectorAll('.player-card');
+    for (let i = 0; i < existingCards.length; i++) {
+      prevPoints[existingCards[i].dataset.name] = parseInt(existingCards[i].dataset.points || '0', 10);
+    }
+
+    container.innerHTML = sorted.map(function(p, idx) {
+      const isLeader = someoneScored && p.points === maxPts;
+      return '' +
+        '<div class="player-card ' + (isLeader ? 'leader' : '') + '" data-name="' + p.name + '" data-points="' + p.points + '">' +
+          '<div class="player-rank">#' + (idx + 1) + '</div>' +
+          '<div class="player-name">' + p.name + '</div>' +
+          '<div class="player-points" id="pts-' + p.name + '">' + p.points + '</div>' +
+          '<div class="player-points-label">Siege</div>' +
+          '<div class="adjust-row">' +
+            '<button class="adjust-btn minus" data-action="adjust" data-name="' + p.name + '" data-delta="-1">−</button>' +
+            '<button class="adjust-btn plus" data-action="adjust" data-name="' + p.name + '" data-delta="1">+</button>' +
+          '</div>' +
+        '</div>';
+    }).join('');
+
+    sorted.forEach(function(p) {
+      if (prevPoints[p.name] !== undefined && prevPoints[p.name] !== p.points) {
+        const el = document.getElementById('pts-' + p.name);
+        if (el) {
+          el.classList.add('bump');
+          setTimeout(function() { el.classList.remove('bump'); }, 400);
+        }
+      }
+    });
+
+    // Toggle share button based on whether anyone has scored
+    const shareBtn = document.getElementById('btn-share');
+    if (shareBtn) shareBtn.disabled = !someoneScored;
+  }
+
+  function renderRounds() {
+    const container = document.getElementById('rounds');
+    container.innerHTML = state.rounds.map(function(round, ri) {
+      return '' +
+        '<div class="round">' +
+          '<div class="round-label">Runde ' + (ri + 1) + '</div>' +
+          round.map(function(match, mi) {
+            return '' +
+              '<div class="match ' + (match.winner ? 'decided' : '') + '">' +
+                '<div class="team ' + (match.winner === 'A' ? 'winner' : '') + '" data-action="winner" data-round="' + ri + '" data-match="' + mi + '" data-team="A">' +
+                  '<div class="team-names">' + match.teamA.join(' & ') + '</div>' +
+                  (!match.winner ? '<div class="team-hint">Tippen für Sieg</div>' : '') +
+                '</div>' +
+                '<div class="vs">VS</div>' +
+                '<div class="team ' + (match.winner === 'B' ? 'winner' : '') + '" data-action="winner" data-round="' + ri + '" data-match="' + mi + '" data-team="B">' +
+                  '<div class="team-names">' + match.teamB.join(' & ') + '</div>' +
+                  (!match.winner ? '<div class="team-hint">Tippen für Sieg</div>' : '') +
+                '</div>' +
+                (match.winner ? '<button class="reset-team" style="grid-column: 1 / -1;" data-action="clear" data-round="' + ri + '" data-match="' + mi + '">↺ Ergebnis löschen</button>' : '') +
+              '</div>';
+          }).join('') +
+        '</div>';
+    }).join('');
+  }
+
+  function setWinner(roundIdx, matchIdx, team) {
+    const match = state.rounds[roundIdx][matchIdx];
+    match.winner = (match.winner === team) ? null : team;
+    renderAll();
+    scheduleSave();
+    if (match.winner) {
+      const winners = match.winner === 'A' ? match.teamA : match.teamB;
+      showToast(winners.join(' & ') + ' +1 Punkt');
+    }
+  }
+
+  function clearWinner(roundIdx, matchIdx) {
+    state.rounds[roundIdx][matchIdx].winner = null;
+    renderAll();
+    scheduleSave();
+  }
+
+  function adjustPoints(name, delta) {
+    const currentTotal = calculatePoints()[name];
+    if (delta < 0 && currentTotal <= 0) {
+      showToast(name + ' hat 0 Punkte');
+      return;
+    }
+    state.manualAdjustments[name] = (state.manualAdjustments[name] || 0) + delta;
+    renderAll();
+    scheduleSave();
+    showToast(name + ' ' + (delta > 0 ? '+' : '') + delta + ' Punkt');
+  }
+
+  function addRound() {
+    state.rounds.push(createRound());
+    renderAll();
+    scheduleSave();
+    setTimeout(function() {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }, 100);
+  }
+
+  function resetAll() {
+    if (confirm('Wirklich alle Ergebnisse löschen? Das gilt für alle Spieler!')) {
+      state = freshState();
+      renderAll();
+      scheduleSave();
+    }
+  }
+
+  // ─── SHARE IMAGE GENERATION ────────────────────────────────
+  // We render the result image to a <canvas> directly — no external library.
+  // This produces a square 1080×1080 image perfect for WhatsApp/Instagram.
+
+  function generateShareImage() {
+    return new Promise(function(resolve) {
+      const W = 1080;
+      const H = 1350; // 4:5 ratio works well for messaging apps
+      const canvas = document.createElement('canvas');
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext('2d');
+
+      // Background gradient (matches the app's court-green theme)
+      const bgGrad = ctx.createRadialGradient(W/2, 0, 0, W/2, H/2, H);
+      bgGrad.addColorStop(0, '#1f4d3a');
+      bgGrad.addColorStop(0.5, '#143025');
+      bgGrad.addColorStop(1, '#0a1f17');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Subtle court line texture
+      ctx.strokeStyle = 'rgba(244,241,232,0.04)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < W; x += 80) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      }
+      for (let y = 0; y < H; y += 80) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+
+      // ─── Header ─────────────────────────────────────────────
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffd23f';
+      ctx.font = '600 28px Outfit, sans-serif';
+      ctx.fillText('★  PADEL TURNIER  ★', W/2, 90);
+
+      ctx.fillStyle = '#f4f1e8';
+      ctx.font = '700 96px "Bebas Neue", sans-serif';
+      ctx.fillText('ENDSTAND', W/2, 200);
+
+      // Date subtitle
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
+      ctx.fillStyle = '#a8b5af';
+      ctx.font = '400 26px Outfit, sans-serif';
+      ctx.fillText(dateStr, W/2, 245);
+
+      // Decorative divider
+      ctx.strokeStyle = '#ffd23f';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(W/2 - 60, 280);
+      ctx.lineTo(W/2 + 60, 280);
+      ctx.stroke();
+
+      // ─── Podium ─────────────────────────────────────────────
+      const points = calculatePoints();
+      const sorted = PLAYERS.map(function(name) {
+        return { name: name, points: points[name] };
+      }).sort(function(a, b) { return b.points - a.points; });
+
+      const medals = ['🥇', '🥈', '🥉', '4.'];
+      const medalColors = ['#ffd700', '#c0c0c0', '#cd7f32', '#a8b5af'];
+
+      let y = 360;
+      const rowHeight = 110;
+
+      sorted.forEach(function(p, idx) {
+        const isWinner = idx === 0 && p.points > 0;
+        const isTied = idx > 0 && p.points === sorted[0].points && p.points > 0;
+
+        // Row background
+        if (isWinner || isTied) {
+          ctx.fillStyle = 'rgba(255, 210, 63, 0.15)';
+          roundRect(ctx, 60, y - 35, W - 120, 90, 16);
+          ctx.fill();
+          ctx.strokeStyle = '#ffd23f';
+          ctx.lineWidth = 2;
+          roundRect(ctx, 60, y - 35, W - 120, 90, 16);
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = 'rgba(255,255,255,0.04)';
+          roundRect(ctx, 60, y - 35, W - 120, 90, 16);
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(244,241,232,0.12)';
+          ctx.lineWidth = 1;
+          roundRect(ctx, 60, y - 35, W - 120, 90, 16);
+          ctx.stroke();
+        }
+
+        // Medal / rank
+        ctx.textAlign = 'left';
+        ctx.fillStyle = medalColors[idx];
+        if (idx < 3) {
+          ctx.font = '54px sans-serif';
+          ctx.fillText(medals[idx], 95, y + 22);
+        } else {
+          ctx.font = '700 48px "Bebas Neue", sans-serif';
+          ctx.fillText('4.', 105, y + 18);
+        }
+
+        // Player name
+        ctx.fillStyle = '#f4f1e8';
+        ctx.font = '700 56px "Bebas Neue", sans-serif';
+        ctx.fillText(p.name.toUpperCase(), 200, y + 18);
+
+        // Points (right-aligned)
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#ffd23f';
+        ctx.font = '700 64px "Bebas Neue", sans-serif';
+        ctx.fillText(p.points, W - 140, y + 22);
+
+        ctx.fillStyle = '#a8b5af';
+        ctx.font = '500 22px Outfit, sans-serif';
+        ctx.fillText(p.points === 1 ? 'Sieg' : 'Siege', W - 90, y + 22);
+
+        y += rowHeight;
+      });
+
+      // ─── Stats ──────────────────────────────────────────────
+      y += 30;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#a8b5af';
+      ctx.font = '500 28px Outfit, sans-serif';
+      const totalMatches = countDecidedMatches();
+      const totalRounds = state.rounds.length;
+      ctx.fillText(totalRounds + ' Runde' + (totalRounds !== 1 ? 'n' : '') + '  ·  ' + totalMatches + ' Match' + (totalMatches !== 1 ? 'es' : '') + ' gespielt', W/2, y);
+      y += 50;
+
+      // ─── Winner banner (if there's a clear winner) ─────────
+      const topPlayers = sorted.filter(function(p) { return p.points === sorted[0].points && p.points > 0; });
+      if (topPlayers.length === 1) {
+        ctx.fillStyle = '#ffd23f';
+        ctx.font = '600 30px Outfit, sans-serif';
+        ctx.fillText('🏆 SIEGER: ' + topPlayers[0].name.toUpperCase() + ' 🏆', W/2, y);
+        y += 40;
+      } else if (topPlayers.length > 1 && topPlayers[0].points > 0) {
+        ctx.fillStyle = '#ffd23f';
+        ctx.font = '600 26px Outfit, sans-serif';
+        ctx.fillText('Unentschieden zwischen ' + topPlayers.map(function(p) { return p.name; }).join(' & '), W/2, y);
+        y += 40;
+      }
+
+      // ─── Footer ─────────────────────────────────────────────
+      ctx.fillStyle = 'rgba(244,241,232,0.3)';
+      ctx.font = '400 22px Outfit, sans-serif';
+      ctx.fillText('Padel Turnier · Jeder gegen Jeden', W/2, H - 50);
+
+      // Convert to blob
+      canvas.toBlob(function(blob) {
+        resolve({ blob: blob, dataUrl: canvas.toDataURL('image/png') });
+      }, 'image/png', 0.95);
+    });
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  let currentShareBlob = null;
+  let currentShareDataUrl = null;
+
+  function openShareModal() {
+    const modal = document.getElementById('share-modal');
+    const preview = document.getElementById('share-preview');
+    preview.innerHTML = '<div style="padding: 40px; color: #555; font-family: Outfit, sans-serif;">Bild wird erstellt…</div>';
+    modal.classList.add('show');
+
+    // Adjust share button label based on capability
+    const shareActionText = document.getElementById('btn-share-action-text');
+    if (navigator.share) {
+      shareActionText.textContent = 'Teilen';
+    } else {
+      shareActionText.textContent = 'Link kopieren';
+    }
+
+    generateShareImage().then(function(result) {
+      currentShareBlob = result.blob;
+      currentShareDataUrl = result.dataUrl;
+      preview.innerHTML = '<img src="' + result.dataUrl + '" alt="Endstand">';
+    }).catch(function(err) {
+      console.error('Image generation failed:', err);
+      preview.innerHTML = '<div style="padding: 40px; color: #c00; font-family: Outfit, sans-serif;">Fehler beim Erstellen des Bildes.</div>';
+    });
+  }
+
+  function closeShareModal() {
+    document.getElementById('share-modal').classList.remove('show');
+  }
+
+  function shareAction() {
+    if (!currentShareBlob) {
+      showToast('Bild noch nicht bereit');
+      return;
+    }
+
+    // Try Web Share API with files (mobile)
+    if (navigator.canShare) {
+      const file = new File([currentShareBlob], 'padel-endstand.png', { type: 'image/png' });
+      if (navigator.canShare({ files: [file] })) {
+        navigator.share({
+          files: [file],
+          title: 'Padel Turnier — Endstand',
+          text: 'Unser Padel-Turnier Endstand 🎾'
+        }).then(function() {
+          showToast('Geteilt!');
+        }).catch(function(err) {
+          if (err.name !== 'AbortError') {
+            console.error('Share failed:', err);
+            downloadImage();
+          }
+        });
+        return;
+      }
+    }
+
+    // Fallback: download
+    downloadImage();
+  }
+
+  function downloadImage() {
+    if (!currentShareDataUrl) {
+      showToast('Bild noch nicht bereit');
+      return;
+    }
+    const link = document.createElement('a');
+    link.href = currentShareDataUrl;
+    const date = new Date().toISOString().slice(0, 10);
+    link.download = 'padel-endstand-' + date + '.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('Bild gespeichert');
+  }
+
+  let toastTimer = null;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() { t.classList.remove('show'); }, 1500);
+  }
+
+  function renderAll() {
+    renderRanking();
+    renderRounds();
+  }
+
+  // ─── Event delegation ──────────────────────────────────────
+  document.addEventListener('click', function(e) {
+    if (isLoading) return;
+    const target = e.target.closest('[data-action]');
+    if (!target) return;
+    const action = target.getAttribute('data-action');
+    if (action === 'winner') {
+      setWinner(
+        parseInt(target.getAttribute('data-round'), 10),
+        parseInt(target.getAttribute('data-match'), 10),
+        target.getAttribute('data-team')
+      );
+    } else if (action === 'clear') {
+      e.stopPropagation();
+      clearWinner(
+        parseInt(target.getAttribute('data-round'), 10),
+        parseInt(target.getAttribute('data-match'), 10)
+      );
+    } else if (action === 'adjust') {
+      adjustPoints(
+        target.getAttribute('data-name'),
+        parseInt(target.getAttribute('data-delta'), 10)
+      );
+    }
+  });
+
+  document.getElementById('btn-add-round').addEventListener('click', addRound);
+  document.getElementById('btn-reset').addEventListener('click', resetAll);
+  document.getElementById('btn-share').addEventListener('click', openShareModal);
+  document.getElementById('btn-share-close').addEventListener('click', closeShareModal);
+  document.getElementById('btn-share-action').addEventListener('click', shareAction);
+  document.getElementById('btn-download').addEventListener('click', downloadImage);
+
+  // Close modal on background tap
+  document.getElementById('share-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeShareModal();
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>
