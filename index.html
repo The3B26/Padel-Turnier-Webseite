@@ -10,7 +10,8 @@
 <title>Padel Turnier</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Neu: Great Vibes für das dekadente Made by Ayoub hinzugefügt -->
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Great+Vibes&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
@@ -79,6 +80,28 @@
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
+  }
+
+  /* ─── NEU: Dekadentes Made by Ayoub ──────────────────── */
+  .made-by-container {
+    margin-top: 5px;
+    margin-bottom: 15px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .made-by-text {
+    font-family: 'Great Vibes', cursive;
+    font-size: clamp(2rem, 8vw, 3.5rem); /* Dekadent Groß */
+    background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0px 4px 15px rgba(255, 210, 63, 0.4);
+    transform: rotate(-3deg);
+    display: inline-block;
+    letter-spacing: 2px;
+    padding: 0 10px;
   }
 
   .subtitle {
@@ -179,6 +202,8 @@
     font-size: 1.4rem;
     letter-spacing: 0.05em;
     margin: 4px 0 6px;
+    word-break: break-word;
+    line-height: 1.1;
   }
 
   .player-points {
@@ -457,7 +482,7 @@
     font-size: 0.85rem;
   }
 
-  /* ─── SHARE MODAL ─────────────────────────────────────── */
+  /* ─── MODALS ─────────────────────────────────────── */
   .share-modal {
     position: fixed;
     inset: 0;
@@ -477,6 +502,44 @@
     max-width: 500px;
     width: 100%;
     text-align: center;
+    background: var(--court-green-dark);
+    padding: 30px 20px;
+    border-radius: 20px;
+    border: 1px solid var(--card-border);
+  }
+
+  /* Modal Input Styling for Edit Players */
+  .player-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+  
+  .player-input-group label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.1em;
+  }
+
+  .player-input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.1rem;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+
+  .player-input:focus {
+    border-color: var(--accent);
+    background: rgba(255,255,255,0.08);
   }
 
   .share-preview {
@@ -512,7 +575,7 @@
     margin-top: 6px;
   }
 
-  .share-close:hover { color: var(--text); }
+  .share-close:hover { color: var(--text); background: rgba(255,255,255,0.05); }
 
   /* Hidden canvas-rendering element */
   #share-canvas-host {
@@ -534,7 +597,14 @@
   <header>
     <div class="eyebrow">★ Padel Turnier ★</div>
     <h1>Jeder gegen<br>Jeden</h1>
-    <p class="subtitle">Ayoub · Ilias · Anas · Aymane — 90 Minuten Spielzeit</p>
+    
+    <!-- NEU: Dekadenter "Made by"-Tag -->
+    <div class="made-by-container">
+      <span class="made-by-text">Made by Ayoub</span>
+    </div>
+
+    <!-- Dynamischer Subtitle -->
+    <p class="subtitle" id="subtitle">Lädt Spieler... — 90 Minuten Spielzeit</p>
   </header>
 
   <div class="sync-bar">
@@ -554,16 +624,52 @@
   <div class="controls">
     <button class="btn share" id="btn-share" disabled>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
-      Endstand teilen
+      Endstand
     </button>
     <button class="btn primary" id="btn-add-round">+ Neue Runde</button>
+    
+    <!-- NEU: Spieler anpassen Button -->
+    <button class="btn" id="btn-edit-players">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      Spieler
+    </button>
+
     <button class="btn danger" id="btn-reset">Zurücksetzen</button>
+  </div>
+</div>
+
+<!-- Edit Players modal -->
+<div class="share-modal" id="players-modal">
+  <div class="share-modal-content">
+    <h2 style="font-family: 'Bebas Neue'; color: var(--accent); margin-bottom: 20px; font-size: 2rem; letter-spacing: 0.1em;">Spieler anpassen</h2>
+    <div class="player-input-group">
+      <div>
+        <label>Spieler 1</label>
+        <input type="text" id="p1-input" class="player-input" placeholder="Ayoub">
+      </div>
+      <div>
+        <label>Spieler 2</label>
+        <input type="text" id="p2-input" class="player-input" placeholder="Ilias">
+      </div>
+      <div>
+        <label>Spieler 3</label>
+        <input type="text" id="p3-input" class="player-input" placeholder="Anas">
+      </div>
+      <div>
+        <label>Spieler 4</label>
+        <input type="text" id="p4-input" class="player-input" placeholder="Aymane">
+      </div>
+    </div>
+    <div class="share-actions">
+      <button class="btn primary" id="btn-save-players" style="justify-content: center;">Übernehmen & Speichern</button>
+      <button class="share-close" id="btn-players-close">Abbrechen</button>
+    </div>
   </div>
 </div>
 
 <!-- Share modal -->
 <div class="share-modal" id="share-modal">
-  <div class="share-modal-content">
+  <div class="share-modal-content" style="background: transparent; border: none; padding: 20px;">
     <div class="share-preview" id="share-preview">
       <div style="padding: 40px; color: #555;">Bild wird erstellt…</div>
     </div>
@@ -572,11 +678,11 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
       <span id="btn-share-action-text">Teilen</span>
     </button>
-      <button class="btn" id="btn-download">
+      <button class="btn" id="btn-download" style="justify-content: center; background: rgba(255,255,255,0.1);">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
         Als Bild speichern
       </button>
-      <button class="share-close" id="btn-share-close">Schließen</button>
+      <button class="share-close" id="btn-share-close" style="background: var(--court-green-dark);">Schließen</button>
     </div>
   </div>
 </div>
@@ -594,30 +700,32 @@
   //  ⚠️  HIER DEINE EIGENEN WERTE EINTRAGEN  ⚠️
   // ════════════════════════════════════════════════════════════
   const BIN_ID  = '6a08a3c7c0954111d83281df';
-  const API_KEY = '$2a$10$SNKLHtEmiwyuvqgWUvI2YuR5y2OEMYDquDDMv3LGZmVEi5j.SX/Rm';
+  const API_KEY = '$2a$10$wRRd3MBLjIYLxJ/WR6PV/uLAJ3SQgFHItid6Fn.UDL7RmP.cceTrG';
   // ════════════════════════════════════════════════════════════
 
-  const PLAYERS = ['Ayoub', 'Ilias', 'Anas', 'Aymane'];
-
-  const TEAM_COMBOS = [
-    { teamA: ['Ayoub', 'Ilias'], teamB: ['Anas', 'Ouail'] },
-    { teamA: ['Ayoub', 'Anas'],  teamB: ['Ilias', 'Ouail'] },
-    { teamA: ['Ayoub', 'Ouail'], teamB: ['Ilias', 'Anas'] }
-  ];
+  // Default-Spieler, falls noch keine im Save State existieren
+  const DEFAULT_PLAYERS = ['Ayoub', 'Ilias', 'Anas', 'Aymane'];
 
   const API_BASE = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
   const POLL_INTERVAL = 3000;
   const SAVE_DEBOUNCE = 400;
 
-  function createRound() {
-    return TEAM_COMBOS.map(function(c) {
-      return { teamA: c.teamA, teamB: c.teamB, winner: null };
-    });
+  // Generiert die Runden (jeder gegen jeden) dynamisch anhand der aktuell eingestellten 4 Spieler
+  function createRound(players) {
+    return [
+      { teamA: [players[0], players[1]], teamB: [players[2], players[3]], winner: null },
+      { teamA: [players[0], players[2]], teamB: [players[1], players[3]], winner: null },
+      { teamA: [players[0], players[3]], teamB: [players[1], players[2]], winner: null }
+    ];
   }
 
   function freshState() {
-    const s = { rounds: [createRound()], manualAdjustments: {} };
-    PLAYERS.forEach(function(p) { s.manualAdjustments[p] = 0; });
+    const s = { 
+      players: [...DEFAULT_PLAYERS], 
+      rounds: [createRound(DEFAULT_PLAYERS)], 
+      manualAdjustments: {} 
+    };
+    DEFAULT_PLAYERS.forEach(function(p) { s.manualAdjustments[p] = 0; });
     return s;
   }
 
@@ -658,11 +766,20 @@
   function normalizeState(raw) {
     if (!raw || typeof raw !== 'object') return freshState();
     const s = freshState();
+    
+    // Alte states haben vllt keine players -> wir nehmen Default
+    if (Array.isArray(raw.players) && raw.players.length === 4) {
+      s.players = raw.players;
+    }
+    
     if (Array.isArray(raw.rounds) && raw.rounds.length > 0) s.rounds = raw.rounds;
+    
     if (raw.manualAdjustments && typeof raw.manualAdjustments === 'object') {
-      PLAYERS.forEach(function(p) {
+      s.players.forEach(function(p) {
         if (typeof raw.manualAdjustments[p] === 'number') {
           s.manualAdjustments[p] = raw.manualAdjustments[p];
+        } else {
+          s.manualAdjustments[p] = 0;
         }
       });
     }
@@ -739,14 +856,14 @@
 
   function calculatePoints() {
     const points = {};
-    PLAYERS.forEach(function(p) { points[p] = state.manualAdjustments[p] || 0; });
+    state.players.forEach(function(p) { points[p] = state.manualAdjustments[p] || 0; });
     state.rounds.forEach(function(round) {
       round.forEach(function(match) {
-        if (match.winner === 'A') match.teamA.forEach(function(p) { points[p]++; });
-        else if (match.winner === 'B') match.teamB.forEach(function(p) { points[p]++; });
+        if (match.winner === 'A') match.teamA.forEach(function(p) { if(points[p] !== undefined) points[p]++; });
+        else if (match.winner === 'B') match.teamB.forEach(function(p) { if(points[p] !== undefined) points[p]++; });
       });
     });
-    PLAYERS.forEach(function(p) { if (points[p] < 0) points[p] = 0; });
+    state.players.forEach(function(p) { if (points[p] < 0) points[p] = 0; });
     return points;
   }
 
@@ -758,9 +875,13 @@
     return count;
   }
 
+  function renderHeaderSubtitle() {
+    document.getElementById('subtitle').innerHTML = state.players.join(' &middot; ') + ' &mdash; 90 Minuten Spielzeit';
+  }
+
   function renderRanking() {
     const points = calculatePoints();
-    const sorted = PLAYERS.map(function(name) {
+    const sorted = state.players.map(function(name) {
       return { name: name, points: points[name] };
     }).sort(function(a, b) { return b.points - a.points; });
     const maxPts = sorted[0].points;
@@ -798,7 +919,6 @@
       }
     });
 
-    // Toggle share button based on whether anyone has scored
     const shareBtn = document.getElementById('btn-share');
     if (shareBtn) shareBtn.disabled = !someoneScored;
   }
@@ -858,7 +978,7 @@
   }
 
   function addRound() {
-    state.rounds.push(createRound());
+    state.rounds.push(createRound(state.players));
     renderAll();
     scheduleSave();
     setTimeout(function() {
@@ -868,26 +988,82 @@
 
   function resetAll() {
     if (confirm('Wirklich alle Ergebnisse löschen? Das gilt für alle Spieler!')) {
-      state = freshState();
+      const currentPlayers = state.players.slice();
+      state = {
+        players: currentPlayers,
+        rounds: [createRound(currentPlayers)],
+        manualAdjustments: {}
+      };
+      currentPlayers.forEach(p => state.manualAdjustments[p] = 0);
       renderAll();
       scheduleSave();
     }
   }
 
+  // ─── PLAYER EDIT MODAL ───────────────────────────────────────
+  
+  function openPlayersModal() {
+    const modal = document.getElementById('players-modal');
+    document.getElementById('p1-input').value = state.players[0] || '';
+    document.getElementById('p2-input').value = state.players[1] || '';
+    document.getElementById('p3-input').value = state.players[2] || '';
+    document.getElementById('p4-input').value = state.players[3] || '';
+    modal.classList.add('show');
+  }
+
+  function closePlayersModal() {
+    document.getElementById('players-modal').classList.remove('show');
+  }
+
+  function savePlayers() {
+    const oldPlayers = state.players;
+    const newPlayers = [
+      document.getElementById('p1-input').value.trim() || 'Spieler 1',
+      document.getElementById('p2-input').value.trim() || 'Spieler 2',
+      document.getElementById('p3-input').value.trim() || 'Spieler 3',
+      document.getElementById('p4-input').value.trim() || 'Spieler 4'
+    ];
+
+    // manualAdjustments an neue Namen anpassen
+    const newAdjustments = {};
+    newPlayers.forEach((newP, idx) => {
+      const oldP = oldPlayers[idx];
+      newAdjustments[newP] = state.manualAdjustments[oldP] || 0;
+    });
+    state.manualAdjustments = newAdjustments;
+
+    // Gespielte Runden anpassen (wir ersetzen die alten Namen durch die neuen)
+    state.rounds.forEach(round => {
+      round.forEach(match => {
+        match.teamA = match.teamA.map(p => {
+          const idx = oldPlayers.indexOf(p);
+          return idx !== -1 ? newPlayers[idx] : p;
+        });
+        match.teamB = match.teamB.map(p => {
+          const idx = oldPlayers.indexOf(p);
+          return idx !== -1 ? newPlayers[idx] : p;
+        });
+      });
+    });
+
+    state.players = newPlayers;
+    closePlayersModal();
+    renderAll();
+    scheduleSave();
+    showToast('Spieler gespeichert');
+  }
+
   // ─── SHARE IMAGE GENERATION ────────────────────────────────
-  // We render the result image to a <canvas> directly — no external library.
-  // This produces a square 1080×1080 image perfect for WhatsApp/Instagram.
 
   function generateShareImage() {
     return new Promise(function(resolve) {
       const W = 1080;
-      const H = 1350; // 4:5 ratio works well for messaging apps
+      const H = 1350; // 4:5 ratio
       const canvas = document.createElement('canvas');
       canvas.width = W;
       canvas.height = H;
       const ctx = canvas.getContext('2d');
 
-      // Background gradient (matches the app's court-green theme)
       const bgGrad = ctx.createRadialGradient(W/2, 0, 0, W/2, H/2, H);
       bgGrad.addColorStop(0, '#1f4d3a');
       bgGrad.addColorStop(0.5, '#143025');
@@ -895,7 +1071,6 @@
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, W, H);
 
-      // Subtle court line texture
       ctx.strokeStyle = 'rgba(244,241,232,0.04)';
       ctx.lineWidth = 1;
       for (let x = 0; x < W; x += 80) {
@@ -905,7 +1080,6 @@
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
       }
 
-      // ─── Header ─────────────────────────────────────────────
       ctx.textAlign = 'center';
       ctx.fillStyle = '#ffd23f';
       ctx.font = '600 28px Outfit, sans-serif';
@@ -915,14 +1089,12 @@
       ctx.font = '700 96px "Bebas Neue", sans-serif';
       ctx.fillText('ENDSTAND', W/2, 200);
 
-      // Date subtitle
       const now = new Date();
       const dateStr = now.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
       ctx.fillStyle = '#a8b5af';
       ctx.font = '400 26px Outfit, sans-serif';
       ctx.fillText(dateStr, W/2, 245);
 
-      // Decorative divider
       ctx.strokeStyle = '#ffd23f';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -930,9 +1102,8 @@
       ctx.lineTo(W/2 + 60, 280);
       ctx.stroke();
 
-      // ─── Podium ─────────────────────────────────────────────
       const points = calculatePoints();
-      const sorted = PLAYERS.map(function(name) {
+      const sorted = state.players.map(function(name) {
         return { name: name, points: points[name] };
       }).sort(function(a, b) { return b.points - a.points; });
 
@@ -946,7 +1117,6 @@
         const isWinner = idx === 0 && p.points > 0;
         const isTied = idx > 0 && p.points === sorted[0].points && p.points > 0;
 
-        // Row background
         if (isWinner || isTied) {
           ctx.fillStyle = 'rgba(255, 210, 63, 0.15)';
           roundRect(ctx, 60, y - 35, W - 120, 90, 16);
@@ -965,7 +1135,6 @@
           ctx.stroke();
         }
 
-        // Medal / rank
         ctx.textAlign = 'left';
         ctx.fillStyle = medalColors[idx];
         if (idx < 3) {
@@ -976,12 +1145,10 @@
           ctx.fillText('4.', 105, y + 18);
         }
 
-        // Player name
         ctx.fillStyle = '#f4f1e8';
         ctx.font = '700 56px "Bebas Neue", sans-serif';
         ctx.fillText(p.name.toUpperCase(), 200, y + 18);
 
-        // Points (right-aligned)
         ctx.textAlign = 'right';
         ctx.fillStyle = '#ffd23f';
         ctx.font = '700 64px "Bebas Neue", sans-serif';
@@ -994,7 +1161,6 @@
         y += rowHeight;
       });
 
-      // ─── Stats ──────────────────────────────────────────────
       y += 30;
       ctx.textAlign = 'center';
       ctx.fillStyle = '#a8b5af';
@@ -1004,26 +1170,21 @@
       ctx.fillText(totalRounds + ' Runde' + (totalRounds !== 1 ? 'n' : '') + '  ·  ' + totalMatches + ' Match' + (totalMatches !== 1 ? 'es' : '') + ' gespielt', W/2, y);
       y += 50;
 
-      // ─── Winner banner (if there's a clear winner) ─────────
       const topPlayers = sorted.filter(function(p) { return p.points === sorted[0].points && p.points > 0; });
       if (topPlayers.length === 1) {
         ctx.fillStyle = '#ffd23f';
         ctx.font = '600 30px Outfit, sans-serif';
         ctx.fillText('🏆 SIEGER: ' + topPlayers[0].name.toUpperCase() + ' 🏆', W/2, y);
-        y += 40;
       } else if (topPlayers.length > 1 && topPlayers[0].points > 0) {
         ctx.fillStyle = '#ffd23f';
         ctx.font = '600 26px Outfit, sans-serif';
         ctx.fillText('Unentschieden zwischen ' + topPlayers.map(function(p) { return p.name; }).join(' & '), W/2, y);
-        y += 40;
       }
 
-      // ─── Footer ─────────────────────────────────────────────
       ctx.fillStyle = 'rgba(244,241,232,0.3)';
       ctx.font = '400 22px Outfit, sans-serif';
       ctx.fillText('Padel Turnier · Jeder gegen Jeden', W/2, H - 50);
 
-      // Convert to blob
       canvas.toBlob(function(blob) {
         resolve({ blob: blob, dataUrl: canvas.toDataURL('image/png') });
       }, 'image/png', 0.95);
@@ -1053,7 +1214,6 @@
     preview.innerHTML = '<div style="padding: 40px; color: #555; font-family: Outfit, sans-serif;">Bild wird erstellt…</div>';
     modal.classList.add('show');
 
-    // Adjust share button label based on capability
     const shareActionText = document.getElementById('btn-share-action-text');
     if (navigator.share) {
       shareActionText.textContent = 'Teilen';
@@ -1081,7 +1241,6 @@
       return;
     }
 
-    // Try Web Share API with files (mobile)
     if (navigator.canShare) {
       const file = new File([currentShareBlob], 'padel-endstand.png', { type: 'image/png' });
       if (navigator.canShare({ files: [file] })) {
@@ -1100,8 +1259,6 @@
         return;
       }
     }
-
-    // Fallback: download
     downloadImage();
   }
 
@@ -1130,6 +1287,7 @@
   }
 
   function renderAll() {
+    renderHeaderSubtitle();
     renderRanking();
     renderRounds();
   }
@@ -1162,14 +1320,25 @@
 
   document.getElementById('btn-add-round').addEventListener('click', addRound);
   document.getElementById('btn-reset').addEventListener('click', resetAll);
+  
+  // Spieler ändern
+  document.getElementById('btn-edit-players').addEventListener('click', openPlayersModal);
+  document.getElementById('btn-players-close').addEventListener('click', closePlayersModal);
+  document.getElementById('btn-save-players').addEventListener('click', savePlayers);
+
+  // Teilen
   document.getElementById('btn-share').addEventListener('click', openShareModal);
   document.getElementById('btn-share-close').addEventListener('click', closeShareModal);
   document.getElementById('btn-share-action').addEventListener('click', shareAction);
   document.getElementById('btn-download').addEventListener('click', downloadImage);
 
-  // Close modal on background tap
-  document.getElementById('share-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeShareModal();
+  // Close modals on background tap
+  document.querySelectorAll('.share-modal').forEach(modal => {
+    modal.addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.classList.remove('show');
+      }
+    });
   });
 
   init();
